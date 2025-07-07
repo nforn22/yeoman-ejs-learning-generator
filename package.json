@@ -11,15 +11,15 @@
   ],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
-    "test": "mocha"
+    "test": "vitest"
   },
   "dependencies": {
     "yeoman-generator": "^7.5.1"
   },
   "devDependencies": {
-    "mocha": "^11.7.1",
+    "vitest": "^3.2.4",
     "yeoman-assert": "^3.1.1",
     "yeoman-environment": "^4.4.3",
     "yeoman-test": "^10.1.1"

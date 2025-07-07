@@ -1,0 +1,20 @@
+/**
+ * Point d'entrée pour <%= projectName %>
+ */
+
+console.log('Démarrage de <%= projectName %>');
+
+class <%= projectName.replace(/[-_\s]/g, '').replace(/^[a-z]/, match => match.toUpperCase()) %>App {
+    constructor() {
+        this.name = '<%= projectName %>';
+    }
+
+    start() {
+        console.log(`Application ${this.name} démarrée avec succès`);
+    }
+}
+
+const app = new <%= projectName.replace(/[-_\s]/g, '').replace(/^[a-z]/, match => match.toUpperCase()) %>App();
+app.start();
+
+export default <%= projectName.replace(/[-_\s]/g, '').replace(/^[a-z]/, match => match.toUpperCase()) %>App; 
