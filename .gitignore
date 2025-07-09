@@ -1,8 +1,7 @@
 node_modules/
 
 dist/
-
-# Scripts de lancement (optionnels, peuvent être générés)
+.DS_Store
 run-generator.sh
 run-generator.bat
 run-generator.ps1
