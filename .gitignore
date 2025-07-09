@@ -1,1 +1,8 @@
 node_modules/
+
+dist/
+
+# Scripts de lancement (optionnels, peuvent être générés)
+run-generator.sh
+run-generator.bat
+run-generator.ps1
