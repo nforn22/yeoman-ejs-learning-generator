@@ -144,17 +144,34 @@ export default class extends Generator {
     }
 
     _generateFrontendFiles(baseDir) {
-        this.fs.copyTpl(
-            this.templatePath('package.json'),
-            this.destinationPath(path.join(baseDir, 'package.json')),
-            {
-                projectName: this.answers.projectName,
-                description: this.answers.description,
-                version: this.answers.version,
-                license: this.answers.license,
-                author: this.answers.author
-            }
-        );
+        // génère package.json avec ou sans linting
+        if (this.answers.linter === 'ESLint' || this.answers.linter === 'Prettier') {
+            this.fs.copyTpl(
+                this.templatePath('linting/package.json.frontend.linting'),
+                this.destinationPath(path.join(baseDir, 'package.json')),
+                {
+                    projectName: this.answers.projectName,
+                    description: this.answers.description,
+                    version: this.answers.version,
+                    license: this.answers.license,
+                    author: this.answers.author,
+                    useTypescriptFrontend: this.answers.useTypescriptFrontend,
+                    testFramework: this.answers.testFramework
+                }
+            );
+        } else {
+            this.fs.copyTpl(
+                this.templatePath('package.json'),
+                this.destinationPath(path.join(baseDir, 'package.json')),
+                {
+                    projectName: this.answers.projectName,
+                    description: this.answers.description,
+                    version: this.answers.version,
+                    license: this.answers.license,
+                    author: this.answers.author
+                }
+            );
+        }
 
         if (this.answers.detailedReadme) {
             this.fs.copyTpl(
@@ -184,6 +201,11 @@ export default class extends Generator {
                 this.templatePath('tsconfig.json'),
                 this.destinationPath(path.join(baseDir, 'tsconfig.json'))
             );
+        }
+
+        // configurations de linting pour frontend
+        if (this.answers.linter === 'ESLint' || this.answers.linter === 'Prettier') {
+            this._generateLintingConfigs(baseDir);
         }
     }
 
@@ -219,20 +241,38 @@ export default class extends Generator {
     }
 
     _generateExpressFiles(baseDir) {
-        // package.json spécifique Express
-        this.fs.copyTpl(
-            this.templatePath('backend/express/package.json'),
-            this.destinationPath(path.join(baseDir, 'package.json')),
-            {
-                projectName: this.answers.projectName,
-                description: this.answers.description,
-                version: this.answers.version,
-                license: this.answers.license,
-                author: this.answers.author,
-                useTypescriptBackend: this.answers.useTypescriptBackend,
-                testFramework: this.answers.testFramework
-            }
-        );
+        // package.json avec linting
+        if (this.answers.linter === 'ESLint' || this.answers.linter === 'Prettier') {
+            this.fs.copyTpl(
+                this.templatePath('linting/package.json.linting'),
+                this.destinationPath(path.join(baseDir, 'package.json')),
+                {
+                    projectName: this.answers.projectName,
+                    description: this.answers.description,
+                    version: this.answers.version,
+                    license: this.answers.license,
+                    author: this.answers.author,
+                    useTypescriptFrontend: this.answers.useTypescriptFrontend,
+                    useTypescriptBackend: this.answers.useTypescriptBackend,
+                    testFramework: this.answers.testFramework
+                }
+            );
+        } else {
+            // package.json standard Express
+            this.fs.copyTpl(
+                this.templatePath('backend/express/package.json'),
+                this.destinationPath(path.join(baseDir, 'package.json')),
+                {
+                    projectName: this.answers.projectName,
+                    description: this.answers.description,
+                    version: this.answers.version,
+                    license: this.answers.license,
+                    author: this.answers.author,
+                    useTypescriptBackend: this.answers.useTypescriptBackend,
+                    testFramework: this.answers.testFramework
+                }
+            );
+        }
 
         // README spécifique
         if (this.answers.detailedReadme) {
@@ -292,6 +332,11 @@ export default class extends Generator {
                 projectName: this.answers.projectName
             }
         );
+
+        // configurations de linting
+        if (this.answers.linter === 'ESLint' || this.answers.linter === 'Prettier') {
+            this._generateLintingConfigs(baseDir);
+        }
     }
 
     _generateKoaFiles(baseDir) {
@@ -307,6 +352,36 @@ export default class extends Generator {
     _generateNestJSFiles(baseDir) {
         // TODO: Implémenter la génération pour NestJS
         this._generateGenericBackendFiles(baseDir);
+    }
+
+    _generateLintingConfigs(baseDir) {
+        // configuration ESLint
+        if (this.answers.linter === 'ESLint' || this.answers.linter === 'Prettier') {
+            if (this.answers.useTypescriptFrontend || this.answers.useTypescriptBackend) {
+                this.fs.copy(
+                    this.templatePath('linting/eslintrc.typescript.js'),
+                    this.destinationPath(path.join(baseDir, '.eslintrc.js'))
+                );
+            } else {
+                this.fs.copy(
+                    this.templatePath('linting/eslintrc.js'),
+                    this.destinationPath(path.join(baseDir, '.eslintrc.js'))
+                );
+            }
+        }
+
+        // configuration Prettier
+        if (this.answers.linter === 'Prettier') {
+            this.fs.copy(
+                this.templatePath('linting/.prettierrc'),
+                this.destinationPath(path.join(baseDir, '.prettierrc'))
+            );
+            
+            this.fs.copy(
+                this.templatePath('linting/prettierignore'),
+                this.destinationPath(path.join(baseDir, '.prettierignore'))
+            );
+        }
     }
 
     _generateGenericBackendFiles(baseDir) {
