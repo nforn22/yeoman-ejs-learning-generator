@@ -120,17 +120,26 @@ export default class extends Generator {
     writing() {
         this.log(`Création du projet ${this.answers.projectName}`);
 
+        // génération de la structure de dossiers selon le type de projet
         if (this.answers.projectType === 'frontend') {
             this.fs.ensureDir(this.destinationPath('src'));
             this._generateFrontendFiles('.');
         }
         if (this.answers.projectType === 'backend') {
-            this.fs.ensureDir(this.destinationPath('backend'));
+            this.fs.ensureDir(this.destinationPath('src'));
+            this.fs.ensureDir(this.destinationPath('routes'));
+            this.fs.ensureDir(this.destinationPath('middleware'));
+            this.fs.ensureDir(this.destinationPath('config'));
+            this._generateBackendFiles('.');
         }
         if (this.answers.projectType === 'fullstack') {
-            this.fs.ensureDir(this.destinationPath('backend'));
+            this.fs.ensureDir(this.destinationPath('backend/src'));
+            this.fs.ensureDir(this.destinationPath('backend/routes'));
+            this.fs.ensureDir(this.destinationPath('backend/middleware'));
+            this.fs.ensureDir(this.destinationPath('backend/config'));
             this.fs.ensureDir(this.destinationPath('frontend/src'));
             this._generateFrontendFiles('frontend');
+            this._generateBackendFiles('backend');
         }
     }
 
@@ -176,6 +185,161 @@ export default class extends Generator {
                 this.destinationPath(path.join(baseDir, 'tsconfig.json'))
             );
         }
+    }
+
+    _generateBackendFiles(baseDir) {
+        // génére les fichiers selon le framework backend choisi
+        const backendStack = this.answers.backendStack?.toLowerCase();
+        
+        if (backendStack === 'express') {
+            this._generateExpressFiles(baseDir);
+        } else if (backendStack === 'koa') {
+            this._generateKoaFiles(baseDir);
+        } else if (backendStack === 'fastify') {
+            this._generateFastifyFiles(baseDir);
+        } else if (backendStack === 'nestjs') {
+            this._generateNestJSFiles(baseDir);
+        } else {
+            // fallback pour un backend générique
+            this._generateGenericBackendFiles(baseDir);
+        }
+
+        // fichiers communs
+        this.fs.copy(
+            this.templatePath('gitignore'),
+            this.destinationPath(path.join(baseDir, '.gitignore'))
+        );
+
+        if (this.answers.useTypescriptBackend) {
+            this.fs.copy(
+                this.templatePath('tsconfig.json'),
+                this.destinationPath(path.join(baseDir, 'tsconfig.json'))
+            );
+        }
+    }
+
+    _generateExpressFiles(baseDir) {
+        // package.json spécifique Express
+        this.fs.copyTpl(
+            this.templatePath('backend/express/package.json'),
+            this.destinationPath(path.join(baseDir, 'package.json')),
+            {
+                projectName: this.answers.projectName,
+                description: this.answers.description,
+                version: this.answers.version,
+                license: this.answers.license,
+                author: this.answers.author,
+                useTypescriptBackend: this.answers.useTypescriptBackend,
+                testFramework: this.answers.testFramework
+            }
+        );
+
+        // README spécifique
+        if (this.answers.detailedReadme) {
+            this.fs.copyTpl(
+                this.templatePath('README.md'),
+                this.destinationPath(path.join(baseDir, 'README.md')),
+                {
+                    projectName: this.answers.projectName,
+                    description: this.answers.description,
+                    author: this.answers.author
+                }
+            );
+        }
+
+        // fichier principal Express
+        this.fs.copyTpl(
+            this.templatePath('backend/express/src/index.ejs'),
+            this.destinationPath(path.join(baseDir, 'src/index.js')),
+            {
+                projectName: this.answers.projectName,
+                version: this.answers.version,
+                author: this.answers.author
+            }
+        );
+
+        // configuration
+        this.fs.copyTpl(
+            this.templatePath('backend/express/config/app.ejs'),
+            this.destinationPath(path.join(baseDir, 'config/app.js')),
+            {
+                projectName: this.answers.projectName
+            }
+        );
+
+        // routes
+        this.fs.copyTpl(
+            this.templatePath('backend/express/routes/index.ejs'),
+            this.destinationPath(path.join(baseDir, 'routes/index.js')),
+            {
+                projectName: this.answers.projectName,
+                version: this.answers.version
+            }
+        );
+
+        // middleware
+        this.fs.copyTpl(
+            this.templatePath('backend/express/middleware/errorHandler.ejs'),
+            this.destinationPath(path.join(baseDir, 'middleware/errorHandler.js')),
+            {}
+        );
+
+        // fichier .env.example
+        this.fs.copyTpl(
+            this.templatePath('backend/express/env.example'),
+            this.destinationPath(path.join(baseDir, '.env.example')),
+            {
+                projectName: this.answers.projectName
+            }
+        );
+    }
+
+    _generateKoaFiles(baseDir) {
+        // TODO: Implémenter la génération pour Koa
+        this._generateGenericBackendFiles(baseDir);
+    }
+
+    _generateFastifyFiles(baseDir) {
+        // TODO: Implémenter la génération pour Fastify
+        this._generateGenericBackendFiles(baseDir);
+    }
+
+    _generateNestJSFiles(baseDir) {
+        // TODO: Implémenter la génération pour NestJS
+        this._generateGenericBackendFiles(baseDir);
+    }
+
+    _generateGenericBackendFiles(baseDir) {
+        // fallback pour un backend générique
+        this.fs.copyTpl(
+            this.templatePath('package.json'),
+            this.destinationPath(path.join(baseDir, 'package.json')),
+            {
+                projectName: this.answers.projectName,
+                description: this.answers.description,
+                version: this.answers.version,
+                license: this.answers.license,
+                author: this.answers.author
+            }
+        );
+
+        if (this.answers.detailedReadme) {
+            this.fs.copyTpl(
+                this.templatePath('README.md'),
+                this.destinationPath(path.join(baseDir, 'README.md')),
+                {
+                    projectName: this.answers.projectName,
+                    description: this.answers.description,
+                    author: this.answers.author
+                }
+            );
+        }
+
+        const ext = this.answers.useTypescriptBackend ? 'ts' : 'js';
+        this.fs.write(
+            this.destinationPath(path.join(baseDir, `src/index.${ext}`)),
+            `// Point d'entrée backend\nconsole.log('Bienvenue sur ${this.answers.projectName} !');\n`
+        );
     }
 
     end() {

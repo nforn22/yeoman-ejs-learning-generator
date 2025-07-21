@@ -1,0 +1,52 @@
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import dotenv from 'dotenv';
+
+// Charger les variables d'environnement
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middleware
+app.use(helmet());
+app.use(cors());
+app.use(morgan('combined'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Routes de base
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Bienvenue sur <%= projectName %> !',
+    version: '<%= version %>',
+    author: '<%= author %>'
+  });
+});
+
+// Route de santé
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Gestion des erreurs 404
+app.use('*', (req, res) => {
+  res.status(404).json({ error: 'Route non trouvée' });
+});
+
+// Middleware de gestion d'erreurs
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Erreur interne du serveur' });
+});
+
+// Démarrage du serveur
+app.listen(PORT, () => {
+  console.log(`🚀 Serveur <%= projectName %> démarré sur le port ${PORT}`);
+  console.log(`📝 Auteur: <%= author %>`);
+  console.log(`🌐 URL: http://localhost:${PORT}`);
+});
+
+export default app; 

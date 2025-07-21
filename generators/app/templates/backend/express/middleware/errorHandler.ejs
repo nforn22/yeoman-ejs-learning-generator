@@ -1,0 +1,38 @@
+// Middleware de gestion d'erreurs
+export const errorHandler = (err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Erreur interne du serveur';
+
+  // Log de l'erreur en développement
+  if (process.env.NODE_ENV === 'development') {
+    console.error('Erreur:', {
+      message: err.message,
+      stack: err.stack,
+      url: req.url,
+      method: req.method,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  res.status(statusCode).json({
+    error: {
+      message,
+      status: statusCode,
+      timestamp: new Date().toISOString()
+    }
+  });
+};
+
+// Middleware pour les routes non trouvées
+export const notFound = (req, res) => {
+  res.status(404).json({
+    error: {
+      message: 'Route non trouvée',
+      status: 404,
+      url: req.url,
+      method: req.method
+    }
+  });
+};
+
+export default { errorHandler, notFound }; 

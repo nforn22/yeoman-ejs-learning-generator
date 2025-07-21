@@ -1,0 +1,29 @@
+{
+  "name": "<%= projectName %>",
+  "version": "<%= version %>",
+  "description": "<%= description %>",
+  "main": "src/index.<%= useTypescriptBackend ? 'ts' : 'js' %>",
+  "scripts": {
+    "start": "node src/index.<%= useTypescriptBackend ? 'ts' : 'js' %>",
+    "dev": "nodemon src/index.<%= useTypescriptBackend ? 'ts' : 'js' %>",
+    "test": "<%= testFramework === 'Jest' ? 'jest' : testFramework === 'Vitest' ? 'vitest' : 'echo \"Error: no test specified\" && exit 1' %>"
+  },
+  "author": "<%= author %>",
+  "license": "<%= license %>",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": [
+    "express",
+    "nodejs",
+    "backend",
+    "api"
+  ]
+} 
