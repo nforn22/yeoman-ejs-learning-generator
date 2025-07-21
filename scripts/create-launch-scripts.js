@@ -192,13 +192,6 @@ chmod +x run-generator.sh
 - \`run-generator.bat\` : Script de lancement pour Windows
 - \`run-generator.ps1\` : Script PowerShell universel
 
-## ✅ Avantages
-
-- ✅ Pas besoin d'installer Node.js
-- ✅ Pas besoin d'installer Yeoman
-- ✅ Pas besoin d'installer les dépendances
-- ✅ Exécution directe sur n'importe quelle machine
-- ✅ Scripts de lancement automatiques
 
 ## 🔧 Développement
 

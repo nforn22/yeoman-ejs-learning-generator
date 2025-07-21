@@ -9,28 +9,28 @@ export default class extends Generator {
                 {
                     type: 'input',
                     name: 'projectName',
-                    message: 'Nom du projet ?',
+                    message: 'Nom du projet :',
                     default: 'mon-projet'
                 },
                 {
                     type: 'input',
                     name: 'description',
-                    message: 'Description du projet ?',
+                    message: 'Brève description du projet :',
                     default: 'Une description par défaut'
                 },
                 {
                     type: 'input',
                     name: 'version',
-                    message: 'Version initiale ?',
+                    message: 'Version initiale (par défaut : 1.0.0) :',
                     default: '1.0.0'
                 },
                 {
                     type: 'list',
                     name: 'projectType',
-                    message: 'Que souhaitez-vous générer ?',
+                    message: 'Quel type de projet souhaitez-vous générer ?',
                     choices: [
-                        { name: 'Frontend uniquement', value: 'frontend' },
-                        { name: 'Backend uniquement', value: 'backend' },
+                        { name: 'Frontend', value: 'frontend' },
+                        { name: 'Backend', value: 'backend' },
                         { name: 'Frontend & Backend (monorepo)', value: 'fullstack' }
                     ],
                     default: 'frontend'
@@ -38,70 +38,76 @@ export default class extends Generator {
                 {
                     type: 'list',
                     name: 'frontendStack',
-                    message: 'Quelle technologie frontend ?',
+                    message: 'Quel framework frontend souhaitez-vous utiliser ?',
                     choices: ['React', 'Vue', 'Angular', 'Svelte', 'Vanilla JS'],
                     when: answers => answers.projectType === 'frontend' || answers.projectType === 'fullstack'
                 },
                 {
                     type: 'list',
                     name: 'backendStack',
-                    message: 'Quelle technologie backend ?',
+                    message: 'Quel framework backend souhaitez-vous utiliser ?',
                     choices: ['Express', 'Koa', 'Fastify', 'NestJS'],
                     when: answers => answers.projectType === 'backend' || answers.projectType === 'fullstack'
                 },
                 {
                     type: 'confirm',
                     name: 'useTypescriptFrontend',
-                    message: 'Utiliser TypeScript pour le frontend ?',
+                    message: 'Souhaitez-vous utiliser TypeScript ?',
                     default: true,
                     when: answers => answers.projectType === 'frontend' || answers.projectType === 'fullstack'
                 },
                 {
                     type: 'confirm',
                     name: 'useTypescriptBackend',
-                    message: 'Utiliser TypeScript pour le backend ?',
+                    message: 'Souhaitez-vous utiliser TypeScript ?',
                     default: true,
                     when: answers => answers.projectType === 'backend' || answers.projectType === 'fullstack'
                 },
                 {
                     type: 'list',
                     name: 'packageManager',
-                    message: 'Quel gestionnaire de paquets ?',
+                    message: 'Gestionnaire de paquets à utiliser :',
                     choices: ['npm', 'yarn'],
                     default: 'npm'
                 },
                 {
                     type: 'confirm',
                     name: 'initGit',
-                    message: 'Initialiser un dépôt git ?',
+                    message: 'Souhaitez-vous initialiser un dépôt Git ?',
                     default: true
                 },
                 {
                     type: 'list',
                     name: 'linter',
-                    message: 'Inclure un linter ou un formatter ?',
+                    message: 'Souhaitez-vous ajouter un outil de linting ou de formatage ?',
                     choices: ['ESLint', 'Prettier', 'Rien'],
                     default: 'ESLint'
                 },
                 {
                     type: 'list',
                     name: 'testFramework',
-                    message: 'Framework de tests ?',
+                    message: 'Souhaitez-vous utiliser un framework de test ?',
                     choices: ['Jest', 'Vitest', 'Mocha', 'Rien'],
                     default: 'Jest'
                 },
                 {
                     type: 'list',
                     name: 'license',
-                    message: 'Licence du projet ?',
+                    message: 'Souhaitez-vous appliquer une licence ?',
                     choices: ['MIT', 'Apache', 'GPL', 'Aucune'],
                     default: 'MIT'
                 },
                 {
                     type: 'confirm',
                     name: 'detailedReadme',
-                    message: 'Générer un README ?',
+                    message: 'Générer un fichier README ? ',
                     default: true
+                },
+                {
+                    type: 'input',
+                    name: 'author',
+                    message: 'Nom de l\'auteur :',
+                    default: 'Développeur'
                 }
             ]);
             this.answers = answers;
@@ -113,41 +119,63 @@ export default class extends Generator {
 
     writing() {
         this.log(`Création du projet ${this.answers.projectName}`);
-        
-        // 1) crée le dossier src s'il n'existe pas
-        const destSrc = this.destinationPath('src');
-        if (!fs.existsSync(destSrc)) {
-            fs.mkdirSync(destSrc, { recursive: true });
+
+        if (this.answers.projectType === 'frontend') {
+            this.fs.ensureDir(this.destinationPath('src'));
+            this._generateFrontendFiles('.');
         }
+        if (this.answers.projectType === 'backend') {
+            this.fs.ensureDir(this.destinationPath('backend'));
+        }
+        if (this.answers.projectType === 'fullstack') {
+            this.fs.ensureDir(this.destinationPath('backend'));
+            this.fs.ensureDir(this.destinationPath('frontend/src'));
+            this._generateFrontendFiles('frontend');
+        }
+    }
 
-        // 2) copie le template
-        this.fs.copyTpl(
-            this.templatePath('src/index.ejs'),
-            this.destinationPath('src/index.js'),
-            { projectName: this.answers.projectName }
-        );
-
-        // copie des templates avec substitution des variables
+    _generateFrontendFiles(baseDir) {
         this.fs.copyTpl(
             this.templatePath('package.json'),
-            this.destinationPath('package.json'),
+            this.destinationPath(path.join(baseDir, 'package.json')),
             {
                 projectName: this.answers.projectName,
                 description: this.answers.description,
-                author: this.answers.author,
-                version: this.answers.version
-            }
-        );
-
-        this.fs.copyTpl(
-            this.templatePath('README.md'),
-            this.destinationPath('README.md'),
-            {
-                projectName: this.answers.projectName,
-                description: this.answers.description,
+                version: this.answers.version,
+                license: this.answers.license,
                 author: this.answers.author
             }
         );
+
+        if (this.answers.detailedReadme) {
+            this.fs.copyTpl(
+                this.templatePath('README.md'),
+                this.destinationPath(path.join(baseDir, 'README.md')),
+                {
+                    projectName: this.answers.projectName,
+                    description: this.answers.description,
+                    author: this.answers.author
+                }
+            );
+        }
+
+        const ext = this.answers.useTypescriptFrontend ? 'ts' : 'js';
+        this.fs.write(
+            this.destinationPath(path.join(baseDir, `src/index.${ext}`)),
+            `// Point d'entrée frontend\nconsole.log('Bienvenue sur ${this.answers.projectName} !');\n`
+        );
+
+        this.fs.copy(
+            this.templatePath('gitignore'),
+            this.destinationPath(path.join(baseDir, '.gitignore'))
+        );
+
+        if (this.answers.useTypescriptFrontend) {
+            this.fs.copy(
+                this.templatePath('tsconfig.json'),
+                this.destinationPath(path.join(baseDir, 'tsconfig.json'))
+            );
+        }
     }
 
     end() {
